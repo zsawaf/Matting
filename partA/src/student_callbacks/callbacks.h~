@@ -1,0 +1,6 @@
+
+/**Callback method to save images of the algorithm**/
+#include "../matting/matting.h"
+{
+  void cb_save(int saveType);
+}

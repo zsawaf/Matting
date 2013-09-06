@@ -1,0 +1,201 @@
+// 
+//  USE THIS FILE FOR YOUR MATTING-SPECIFIC CODE
+//
+//  DO NOT MODIFY THIS FILE ANYWHERE EXCEPT WHERE 
+//  EXPLICITLY NOTED!!!!
+//
+
+
+
+
+#include "matting.h"
+
+
+//
+//  The Triangulation Matting algorithm
+//
+//
+
+bool matting::compute(void)
+{
+
+	//all values needed to calculate the algorithm.
+	//those are the givens in each pixel, k represents background
+	//color of each image.
+	<vxl_byte> rk1; gk1; bk1;
+	<vvxl_byte>vx rk2; gk2; bk2;
+
+	//f represents the foreground color for each pixel.
+	int rf1; gf1; bf1;
+	int rf2; gf2; bf2; 
+
+	//those are the variables we need to find
+	int r0; g0; b0; a0;
+
+	// matrix initialization
+	struct vnl_matrix<vxl_byte> P1;
+	P1.rows = 6;
+	P1.columns = 4;
+	// make all elements in matrix 0 and set appropriate diagonals to 1.
+	P1.fill(0);
+	P1(0, 0) = 1;
+	P1(1, 1) = 1;
+	P1(2, 2) = 1;
+	P1(3, 0) = 1;
+	P1(4, 1) = 1;
+	P1(5, 2) = 1;
+
+
+	struct vnl_matrix<vxl_byte> RES;
+
+	struct vnl_matrix<vxl_byte> P3;
+	P3.rows = 6;
+	P3.col = 1;
+
+	struct vnl_matrix<vxl_byte> INV;
+	INV.rows = 6;
+	INV.columns = 4;
+
+	if ((alpha_computed_ == true) && (outdated_ == false))
+		// the results have already been computed, so
+		// we have nothing to do
+		return true;
+
+	if (((bool) comp_1_ == false) || 
+		((bool) comp_2_ == false) || 
+		((bool) back_1_ == false) || 
+		((bool) back_2_ == false))
+		// we do not have enough information yet to run the
+		// algorithm, we have nothing to do
+		return false;
+
+	// Ok, we have enough information to proceed
+	
+	// first let us allocate space for the result images
+	alpha_.set_size(ni_, nj_);
+	object_.set_size(ni_, nj_);
+
+
+	//////////////////////////////////////////////////
+	// PLACE YOUR CODE BETWEEN THESE LINES          //
+	//////////////////////////////////////////////////
+
+	// Iterate through every pixel, get the R G B values
+	// for each image, and then do the triangular computation
+	// to find the values for alpha, R0, G0 and B0
+
+	//it doesn't matter which image we're iterating through, since 
+	// they should all be of same size. 
+
+        for (int x=0; i<ni_; x++) {
+                for (int y=0; j<nj_; y++) {
+		//set values for each of the givens for that specific pixel.
+		rk1 = back_1_(i, j).r;
+		gk1 = back_1_(i, j).g;
+		bk1 = back_1_(i, j).b;
+
+		rk2 = back_2_(i, j).r;
+		gk2 = back_2_(i, j).g;
+		bk2 = back_2_(i, j).b;
+
+		rf1 = comp_1_(i, j).r;
+		gf1 = comp_1_(i, j).g;
+		bf1 = comp_1_(i, j).b;
+
+		rf2 = comp_2_(i, j).r;
+		gf2 = comp_2_(i, j).g;
+		bf2 = comp_2_(i, j).b;
+
+		//Fill out matrices with corresponding values
+		//This is the background matrix. 
+		P1(0, 3) = -rk1;
+		P1(1, 3) = -gk1;
+		P1(2, 3) = -bk1;
+		P1(3, 3) = -rk2;
+		P1(4, 3) = -gk2;
+		P1(5, 3) = -bk2;
+
+		//This is the delta foreground matrix, which is the difference
+		//between the foreground and background for each pixel.
+		P3(0, 0) = rf1 - rk1;
+		P3(1, 0) = gf1 - gk1;
+		P3(2, 0) = bf1 - bk1;
+		P3(3, 0) = rf2 - rk2;
+		P3(4, 0) = gf2 - gk2;
+		P3(5, 0) = bf2 - bk2;
+
+		//Right now, the equation is in the form of P3 = P1 x P2
+		//with P2 being the result matrix. 
+		//We need to transform it to the form  inv(P1) x P3 = P2
+
+		INV = P1.pinverse();
+
+		//find results motha fucka
+		RES = INV * P3;
+
+		// sanity checks since values can exceeds 255 or is less than 0.
+		if (RES(0, 0) < 0){
+			RES(0, 0)=0;
+		}
+		if (RES(0, 0) > 255){
+			RES(0,0)=255;
+		}
+
+                if (RES(1, 0) < 0){
+                        RES(1, 0)=0;
+                }
+                if (RES(1, 0) > 255){
+                        RES(1,0)=255;
+                }
+
+                if (RES(2, 0) < 0){
+                        RES(2, 0)=0;
+                }
+                if (RES(2, 0) > 255){
+                        RES(2,0)=255;
+                }
+
+                if (RES(3, 0) < 0){
+                        RES(0, 0)=0;
+                }
+                if (RES(3, 0) > 1){
+                        RES(0,0)=1;
+                }
+
+		//now we set the resulting pixels to the object image
+		object_(i, j).r = RES(0, 0);
+		object_(i, j).g = RES(1, 0);
+		object_(i, j).b = RES(2, 0);
+
+		//alpha component
+		alpha_(i, j) = RES(3, 0);
+		}
+	}
+
+	/////////////////////////////////////////////////
+	
+
+
+	alpha_computed_ = true;
+	outdated_ = false;
+
+	return true;
+}
+
+bool matting::compute_composite(vil_image_view<vil_rgb<vxl_byte> > input_im,
+				vil_image_view<vil_rgb<vxl_byte> > &output_im)
+{
+	//////////////////////////////////////////////////
+	// PLACE YOUR CODE BETWEEN THESE LINES          //
+	//////////////////////////////////////////////////
+
+	//////////////////////////////////////////////////
+
+	return true;
+}
+
+//////////////////////////////////////////////////
+// PLACE ANY ADDITIONAL CODE BETWEEN THESE LINES//
+//////////////////////////////////////////////////
+
+//////////////////////////////////////////////////

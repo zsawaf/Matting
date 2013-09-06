@@ -1,0 +1,168 @@
+------------------------------------------------------------------
+Please write your answer below each question
+------------------------------------------------------------------
+
+------------------------------------------------------------------
+Part B.1 Questions (you must answer questions 1-4 to
+                    get any credit for Part B.1!!)
+------------------------------------------------------------------
+
+ 1. What camera model did you use to capture these photos
+ 
+    SONY DSC-W670
+
+ 2. What camera settings did you use (if any)?
+
+    No!
+    
+ 3. What was the order in which the photos were captured?
+    (eg. "comp1.jpg,comp2.jpg,...")
+
+    comp1.jpg, comp2.jpg, back2.jpg, back1.jpg, newback.jpg
+    
+ 4. In 2-3 sentences, describe your image acquistion procedure
+    (eg. "I put the camera on a table, then put the object in
+     front of a piece of cloth, and took a picture; then ...")
+
+     I put my camera on a toilette roller to act as a tripod, then got my 
+     friend to hold my blue scarf for me, I took a picture of my wallet, 
+     asked him to take the scarf off, took second picture, 
+     asked him to take wallet off, and put scarf back on, then took picture of the wall. 
+     Then I took a picture of my hand. Interesting right?
+     
+ 5. If you consider your experiment unsuccessful, explain why
+    it was not possible for you to capture a good set of photos for
+    the matting algorithm
+    
+    My experiment was not very successful, basically due to the fact that the blue 
+    background had a lot of wavy parts that alternated the blue color between dark 
+    and black, making the background image inconsistent. This caused the object image to 
+    have background residue. I was not able to take a good set of images because I was 
+    in school all day with limited supplies, and my camera sucks. 
+    There's also always an error factor where the images aren't perfectly centered 
+    allowing flows in the algorithm. 
+
+
+------------------------------------------------------------------
+Part B.2 Questions: Note that you need to answer two of the three
+                    questions to get full credit for Part B.2. If
+                    you answer all three, you will receive EXTRA
+                    credit.
+------------------------------------------------------------------
+
+First, run the algorithm on the following input:
+   Background 1: test_images/small/flowers-backA.jpg
+   Background 2: test_images/small/flowers-backB.jpg
+   Composite  1: test_images/small/flowers-compA.jpg
+   Composite  2: test_images/small/flowers-compB.jpg
+
+Then, run the algorithm with the following input:
+   Background 1: test_images/small/flowers-backC.jpg
+   Background 2: test_images/small/flowers-backD.jpg
+   Composite  1: test_images/small/flowers-compC.jpg
+   Composite  2: test_images/small/flowers-compD.jpg
+
+You will notice that in the second run both the computed
+Alpha Matte and the Object image has many "artifacts".
+
+------------------------------------------------------------------
+
+Question 1 (10 points)
+
+The Object image computed in the second run contains a lot of pixels
+that should really be part of the background, but
+aren't. Equivalently, even though the Alpha Matte should be zero
+at those pixels, the algorithm assigned non-zero values.
+
+Take, for example, pixel (I,J) = (50,375) with intensity
+(243,243,243). Its alpha value is (243/255), i.e., close to 1, even
+though it should really be 0. To take a better look at individual
+pixels in that region, enter the following values in the view control
+boxes on both panels (Zoom: 10; Center I: 50; Center J: 375)
+
+Explain why this pixel has a non-zero alpha. Be as concrete as
+possible.
+
+The problem with this image is that the backgrounds are almost identical. 
+Let's examine the rgb values at the (30, 375) for the two backgrounds. For
+back1, r is 34, g is 25 and b is 16, where as for back2, r is 37, g is 24, and b is 7. 
+
+So let's do some calculations on the red values given that the composite value was 33:
+
+33 = aR + (1 - a).34
+33 = aR + (1 - a).37
+
+two equations two unkowns, let's solve:
+
+33 = aR + 34 - 34a
+33 = aR + 37 - 37a
+
+-1 = aR - 34a 
+-3 = aR - 37a
+
+eventually leading to a = 1 
+
+The whole point of the triangulation algorithm is that we have more unkowns than knowns, and by
+using different background colors, we are able to obtain more knowns than unkowns. But in this case, 
+we observe that delta r, delta g, and delta b is less than 10, therefore providing us with a non zero
+alpha. 
+
+------------------------------------------------------------------
+    
+Question 2 (10 points)
+
+Conversely, there are many pixels that should be fully opaque
+(ie. part of the foreground), but aren't. Take, for example, pixel
+(I,J) = (332,164). Even though that pixel is on a flower petal, which
+is on the foreground, the intensity of its Alpha component is
+(200,200,200), meaning that its alpha value (=200/255) is less than 1.
+The effect is that a portion of the flower is taken to be partially
+transparent.
+
+
+Explain why this pixel has non-unit alpha. Be as concrete as
+possible.
+
+Hint: examine the linear system of equations that must be solved
+      for that pixel (and the associated matrix).
+
+Let's look at the linear equation system again for red as an example. (blue and green follow similar patterns)
+183 = R0 + (1 - a).136
+185 = R0 + (1 - a).143
+
+Solving into
+-2 = -7 + 5a => a = 5/7. 
+
+The reasoning behind this is that we observe that c1 and c2 are off by 2 intensity measures. Meaning that the images 
+don't line up together perfectly, not allowing them to be fully opaque. 
+
+------------------------------------------------------------------
+    
+Question 3 (10 points)
+
+Now let's go back to the first run above (ie. the Alpha Matte and
+Object computed from the *A.jpg and *B.jpg images).
+
+Looking closely at the computed Alpha Matte, you will notice that the
+alpha values are either zero or near zero on the right size of the
+vase. For example, pixel (I,J)=(515,819) has intensity (0,0,0). Use
+Zoom=1; (I,J) = (515,819) for better viewing...
+
+On the other hand, pixels on the *left* side of the vase have non-zero
+(albeit small) alpha values. For example, pixel (I,J)=(50,816) has
+alpha equal to 0.1=25/255, suggesting that there is there is an
+"object" in front of the background in that part of the photo, with a
+transparency of about 90%. The effect may be slight, but it is
+noticeable (Use Zoom-1; (I,J)=(50,816) for better viewing).
+
+Why does that pixel (and many others on the left side of the vase)
+have non-zero alpha? Be as concrete as possible.
+
+I know the answer, but it's 11:15, and I'm too tired, so I'm just going to provide a short answer. 
+
+The fact that there's a 90% transparency on the left side of the vase, but a 100% transparency on the right 
+side of the vase suggests that the shadow is part of the foreground. This is primarly because the delta values were 
+too close, allowing the shadow to be part of the foreground image. 
+------------------------------------------------------------------
+    
+

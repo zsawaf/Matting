@@ -1,0 +1,312 @@
+Assignment #1
+CSC320H Spring 2013
+Kyros Kutulakos
+
+Notes on the starter code for the matting application 
+
+----------------------------------------------------------------------
+For students interested in working at home on windows
+(win2k, winXP) under VisualC++: 
+  . The assignment code, along with the libraries we will be using
+    (opengl, fltk, VXL) are completely portable: you should be able
+    to compile your program for both unix and windows without having
+    to change (almost) anything in your source files.
+  . Assignment marking will be done on CDF. Therefore, regardless of
+    where you do most of the work, you *will* need to create a final,
+    working implementation under Linux on the CDF machines.
+  . For more information about using VisualC++ for this assignment and
+    for the course in general, read the README.VC++ file. 
+  . The following notes apply both to Linux and Windows
+    implementations.
+----------------------------------------------------------------------
+
+---------------
+GENERAL REMARKS
+---------------
+
+A. SOLUTION EXECUTABLE
+
+  I am supplying two full implementations of the assignment:
+
+    bin/VisComp_full.exe	     win32 executable compiled with VC++6.0
+			             under winXP
+    bin/viscomp_full	     	     linux executable compiled on CDF
+
+
+  The executable operates in three modes:
+
+  1. Non-interactive (ie. batch) mode:
+
+     You supply all images as command-line arguments and run
+         viscomp_full -no_gui [other command-line arguments]
+     from the command line. 
+
+     To see the various command-line options, type 
+	 viscomp_full -help
+
+  2. Fully interactive mode:
+
+     You just type 'viscomp_full' and a window opens up
+     with two panels for displaying images. You can now use the 
+     menus or keyboard shortcuts to load images and run the code.
+
+  3. Combination:
+
+     If you don't supply the '-no_gui' option on the command line but
+     supply command-line options for loading some (or all) of the 
+     images. In this case, the images will be loaded, the matting
+     algorithm will be run if all the required images have been 
+     supplied and, finally, the UI will be displayed.
+
+  4. To quickly get a feel for the matting procedure & the implementation:
+
+     - Type 'viscomp_full' on the command line.
+     - With the mouse anywhere on the UI window that opens, type
+          <Alt>-b  and enter the file test_images/tiny/flowers-backA.jpg in the dialog box
+          <Alt>-n  and enter the file test_images/tiny/flowers-backB.jpg in the dialog box
+          <Alt>-c  and enter the file test_images/tiny/flowers-compA.jpg in the dialog box
+          <Alt>-v  and enter the file test_images/tiny/flowers-compB.jpg in the dialog box
+	  <Alt>-r  to run the matting algorithm and display the computed alpha matte and
+                   the object image in the two panels
+     - Select 'Triangulation Matting->Create Composite' and enter the file 
+          test_images/tiny/window.jpg in the dialog box 
+       this will create a composite from the previously-computed alpha matte and the
+       supplied image and display both images side by side.
+     - Select 'Triangulation Matting->Display Control'. This will open up another 
+       small window with two drop-down menus that allow you to choose the images displayed
+       in the two panels of the main window.
+
+
+B. TEST IMAGES
+
+     test_images/tiny
+     test_images/small
+     test_images/large     These are directories containing identical
+			   images but in different sizes. I suggest you
+ 			   begin by using the images in the tiny/
+			   directory to quickly check things out.
+
+     Each directory contains files of the form
+
+          ????-back?.jpg   An image of the background
+       and    
+          ????-comp?.jpg   An image of the object in front of that background
+     
+       as well as images
+
+       window.jpg
+       leaves.jpg
+
+     that you can use to create new composites.
+
+C.  INTERACTIVE IMAGE VIEWING
+
+    - A left mouse click over an image brings the pixel under the mouse
+      to the center of the panel (approximately)
+
+    - If the mouse is over the image, the current pixel and its RGB values
+      are printed below the image
+
+    - Entering a zoom value (eg. '10') and pressing <ENTER> in the zoom box 
+      will increase the image size accordingly, for close-up viewing of 
+      individual pixels.
+
+    - Entering an invalid zoom value (eg. 'afd') will reset the zoom to 1
+
+    - Entering a pixel position in the center x and center y boxes, will
+      recenter the image accordingly
+
+    - As a placeholder for future assignments, if you select 'Draw' from
+      the drop-down menu next to the left image panel, the behavior of
+      interface changes---dragging the left mouse will now draw a rectangle
+      over the image (this feature is not used in this assignment and you
+      do not need to understand how it is implemented).
+
+
+---------------------
+STRUCTURE OF THE CODE
+---------------------
+
+1. NOTES
+
+  * All source and header files are in the src directory
+  * You should not modify ANY files in src/ except for the file
+    src/VisCompUI.fl (modified through fluid) and files in
+    the src/matting and src/student_callbacks sub-directories. 
+  * You should NOT modify the already-existing code in those 
+    directories except as noted in the files themselves.
+  * All your code should go in the src/matting and src/student_callbacks
+    directories. You are free to distribute your code in as many 
+    additional files as you want, as long as they remain in those
+    directories. We will be running scripts to compile and run your
+    code automatically, and code outside those directories will be
+    ignored.
+  * The following conventions are used:
+
+       src/		     Contains top-level functions as well as 
+                             the fluid code for creating the UI.
+
+       src/gl		     Files related to OpenGL and texture mapping
+
+       src/imdraw	     A class for displaying VXL images on an 
+ 			     OpenGL panel inside an FLTK user interface.
+			     The files here implement various methods of
+			     the class.
+
+       src/file_callbacks    Instead of writing C++ code for the UI 
+		             directly through the fluid interface,
+			     it is more convenient to write the 
+			     callback implementation in individual files
+			     that are included in fluid with 
+			     an #include statement. The files in this
+			     directory (and their associated entries in
+			     fluid) give an example of this convention.
+
+       src/student_callbacks Any callbacks you write yourself should
+			     be placed in this directory only. Do not
+			     put your callback code directly into fluid;
+			     include the code in the fluid specs
+			     using #include statements. 
+
+       src/matting           The rest of your code should be in this
+			     directory.
+
+
+
+3. FILES IN THE DIRECTORY src/
+
+  bin/viscomp      Executable of the "starter" implementation. This is
+		   created by compiling the code you already have.
+                   You will need to extend it so that it matches the exact
+		   behavior of the full implementation. Run this after
+		   becoming familiar with the full implementation.
+
+  Makefile	   Makefile that buids the starter executable by 
+		   running 'make' in the src/ directory
+
+  VisCompUI.fl:	   Initial UI specification for your interface. Run
+	           'fluid VisCompUI.fl' to see what components have
+	           been implemented. Run this next. 
+
+  main.cxx:	   Top-level function. This is the first piece of
+		   code you should be reading. Pay very close 
+		   attention to the process_args() function, which 
+  		   essentially implements the batch version of the 
+		   matting procedure. This is a good place to see
+		   how the various methods of the matting class are
+		   bare used.
+		   
+  VisCompUI.cxx    Files generated automatically by fluid. You should
+  VisCompUI.h      not need to read these files at all and you should
+                   never modify them directly. All edits should 
+                   happen indirectly, but running fluid on the file
+                   VisCompUI.fl to change the various settings of
+                   the interface.
+
+  fltk_includes.h  Include files used by the FULL implementation. Ordinarily,
+  vxl_includes.h   you should not need to include any more VXL or FLTK 
+                   include files to get your full implementation to compile
+		   correctly.
+
+4. FILES IN THE DIRECTORY src/gl
+
+  gl/
+  Texture.cxx      Helper functions that you do not need to read
+  Texture.h        or understand. You may be interested in looking
+  glutils.cxx      at them later in the course, once we've covered
+  glutils.h:       texture mapping, etc.
+
+5. FILES IN DIRECTORY src/file
+  
+  load_image.cxx   This file implements the load_image function, for
+  load_image.h     reading images from disk. You should look at this
+		   function and understand it, and use it for opening
+		   images.
+
+6. FILES IN DIRECTORY src/file_callbacks
+
+  callback_open_drawing.h  These files do not contain any code; they
+  callback_save_drawing.h  are placeholders for future assignments. You
+  callback_save_image.h    do not need to look at them, except to note
+                           that this is how you must organize your 
+                           callbacks, i.e., by placing an #include statement
+			   in the fluid UI spec and putting the code
+			   in a special directory (student_callbacks in your case)
+
+7. FILES IN DIRECTORY src/student_callbacks
+
+   This directory is currently empty; it is where you put all your
+   callback code.
+
+8. FILES IN THE DIRECTORY src/matting
+
+  matting.h                You must thoroughly digest this file. It contains
+		           a list of all methods related to the matting
+			   procedure. You are supposed to implement some of 
+		           these methods (and potentially add your own) and
+			   this is where the top-level spec of your
+                           implementation is found (ie. input parameters, 
+			   output parameters of the various methods you
+			   should implement, etc).
+
+  matting.cxx              This file contains lots of little nitty-gritty
+			   routines for accessing the elements of the
+			   matting class. You should read it and understand
+			   it, as you will be constantly using the methods
+			   implemented here.
+
+  matting_algorithm.cxx    This is where YOUR code goes!! Clearly, you need
+			   to fully understand the pieces of code already
+			   supplied.
+
+9. FILES IN THE DIRECTORY src/imdraw
+
+  imdraw.h	   This is the main class for drawing images and
+		   other graphics in an OpenGL panel. You will not
+		   need to implement anything for this class, but
+		   you should be familiar with the class interface
+		   (ie. the public methods of the imdraw class) since
+		   you will need to use some of them in your code.
+
+  imdraw_*.cpp     Files that implement methods of the imdraw
+		   class.
+
+  imdraw_utils.cxx This file implements some utility methods for 
+                   the imdraw class. 
+                   If you plan to run your algorithm on images that
+		   are larger than 512x512, you will need to modify
+		   a constant at the top of this file.
+		   Other than that, you do not need to read
+                   or understand this file for this assignment.
+
+  imdraw_init.cpp  Class constructor. 
+  
+  imdraw_draw.cpp  Routines for drawing graphics. This is an example
+		   and will serve as skeleton code for future assignments.
+  
+  imdraw_handle.cpp Routines for handling mouse and window events. Again,
+                    you do not need to look at this now, but you will later
+		    in the course.
+
+  read_drawing.cpp  Routines that parse a file that contains 
+                   drawing commands and call the appropriate 
+	           drawing routines. Not relevant for this assignment.
+
+
+10. Files in directory VC++/
+
+  This directory contains the VC++6.0 workspace and project for
+  compile the code under windows XP. Just open up the workspace and
+  type 'build all' to build the starter code.
+
+11. Notes about the UI specifications
+
+  * The whole interface was designed through fluid. You should run 
+    'fluid VisCompUI.fl' to see it.
+  * The first place to begin understanding how the interface works and
+    how images are handled is to look at the specs for the 
+    "File->Open Left Image" and "File->Open Right Image" menu items
+    off of the File menu. Take a look at the interactive_load_image()
+    routine, specified as a function through fluid, to get a sense of
+    how dialog boxes work and how to display images using the 
+    imdraw class, etc.

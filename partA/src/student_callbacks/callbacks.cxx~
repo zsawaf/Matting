@@ -1,0 +1,20 @@
+#include "callbacks.h"
+
+void cb_save(Fl_Menu_* o, void *v, int saveType){
+	vil_image_view<vil_rgb<vxl_byte> > to_save;
+
+	//do error checking here
+	switch(saveType){
+		case(0):
+			to_save = matting::get1(Alpha);
+		case(1):
+			to_save = matting:get(Object);
+		case(2):
+			to_save = matting:get(NewComp);
+		default:
+			fl_alert("Error");
+	}
+	if (vil_save(to_save, "taget_image.jpg") == true){
+		fl_alert("Saved Successfuly.");
+	}
+}
